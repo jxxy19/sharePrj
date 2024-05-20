@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.fullstack4.shareprj.mapper.MemberMapper">
+    <insert id="join">
+        INSERT INTO tbl_member ( memberId, pwd, name, phoneNum, email,regDate)
+        VALUES (#{memberId} , #{pwd}, #{name}, #{phoneNum}, #{email}, now() )
+    </insert>
+<!--    아이디 중복체크-->
+    <select id="idCheck" parameterType="String" resultType="int">
+        SELECT COUNT(memberId) from tbl_member where memberId = #{memberId}
+    </select>
+    <!--    로그인-->
+    <select id="login_info" resultType="org.fullstack4.shareprj.domain.MemberVO">
+        SELECT memberId, pwd, name, phoneNum, lastLoginDate, loginCnt, leaveDate,email, regDate
+        FROM tbl_member
+        WHERE memberId = #{memberId}
+    </select>
+<!--    로그인 날짜 업데이트-->
+    <update id="loginDate">
+        UPDATE tbl_member SET lastLoginDate = now()
+        WHERE memberId=#{memberId}
+    </update>
+<!--    로그인 카운트 추가-->
+    <update id="loginCnt">
+        UPDATE tbl_member SET loginCnt = loginCnt + 1
+        WHERE memberId=#{memberId}
+    </update>
+<!--    로그인 아이디 확인-->
+    <select id="loginId">
+        select memberId from tbl_member where memberId = #{memberId}
+    </select>
+<!-- 개인정보 확인-->
+<!--    <select id="info_view" resultType="org.fullstack4.shareprj.domain.MemberVO">-->
+<!--        SELECT * from tbl_member where member_id=#{member_id}-->
+<!--    </select>-->
+    <!--    개인정보 수정-->
+<!--    <update id="info_modify">-->
+<!--        UPDATE tbl_member SET  addr1=#{addr1}, addr2=#{addr2}, zipcode=#{zipcode},-->
+<!--                              phone_num=#{phone_num}, email=#{email}, option=#{option}, forever_yn=#{forever_yn}-->
+<!--        where member_id = #{member_id}-->
+<!--    </update>-->
+<!--    <select id="curr_pwd">-->
+<!--        select pwd from tbl_member where member_id = #{member_id}-->
+<!--    </select>-->
+<!--    <update id="delete_member">-->
+<!--        UPDATE tbl_member SET  leave_date = now(), member_state = "N"-->
+<!--        where member_id = #{member_id}-->
+<!--&#45;&#45;         delete from tbl_member where member_id=#{member_id}-->
+<!--    </update>-->
+
+    <select id="memberList">
+        SELECT memberId, name from tbl_member
+    </select>
+
+</mapper>

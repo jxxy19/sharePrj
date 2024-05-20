@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.fullstack4.shareprj.mapper.BbsMapper">
+    <sql id="whereCondition">
+        <where>
+<!--            <trim prefix="and">-->
+<!--                memberId = #{memberId}-->
+<!--            </trim>-->
+<!--            <if test="memberId != null">-->
+<!--                And memberId = #{memberId}-->
+<!--            </if>-->
+<!--            <if test="search_type != null and search_type.length > 0">-->
+<!--                <foreach collection="search_type" item="type" open="(" close=")" separator=" OR ">-->
+<!--                    <if test="type=='t'.toString()">-->
+<!--                        title LIKE CONCAT('%', #{search_word}, '%')-->
+<!--                    </if>-->
+<!--                    <if test="type=='c'.toString()">-->
+<!--                        content LIKE CONCAT('%', #{search_word}, '%')-->
+<!--                    </if>-->
+<!--                </foreach>-->
+<!--            </if>-->
+            <trim prefix="and">
+                memberId = #{memberId}
+            </trim>
+            <if test="search_type != null">
+                <trim prefix="and">
+                    <foreach collection="search_type" item="type" open="(" close=")" separator=" OR ">
+                        <if test="search_word != null and search_word != ''">
+                            <if test="type=='t'.toString()">
+                                title LIKE CONCAT('%', #{search_word}, '%')
+                            </if>
+                            <if test="type=='c'.toString()">
+                                content LIKE CONCAT('%', #{search_word}, '%')
+                            </if>
+                        </if>
+                    </foreach>
+                </trim>
+            </if>
+            <if test="search_date != null or search_date2 != null">
+                <if test="search_date != null and search_date.length > 0">
+                    AND regDate <![CDATA[>=]]> #{search_date}
+                </if>
+                <if test="search_date2 != null and search_date2.length > 0">
+                    AND regDate <![CDATA[<]]> #{search_date2} + INTERVAL 1 DAY
+                </if>
+            </if>
+        </where>
+    </sql>
+    <sql id="whereCondition2">
+        <where>
+            <trim prefix="and">
+                tb.memberId = #{memberId}
+            </trim>
+            <if test="search_type != null">
+                <trim prefix="and">
+                    <foreach collection="search_type" item="type" open="(" close=")" separator=" OR ">
+                        <if test="search_word != null and search_word != ''">
+                            <if test="type=='t'.toString()">
+                                tb.title LIKE CONCAT('%', #{search_word}, '%')
+                            </if>
+                            <if test="type=='c'.toString()">
+                                tb.content LIKE CONCAT('%', #{search_word}, '%')
+                            </if>
+                        </if>
+                    </foreach>
+                </trim>
+            </if>
+            <if test="search_date != null or search_date2 != null">
+                <if test="search_date != null and search_date.length > 0">
+                    AND tb.regDate <![CDATA[>=]]> #{search_date}
+                </if>
+                <if test="search_date2 != null and search_date2.length > 0">
+                    AND tb.regDate <![CDATA[<]]> #{search_date2} + INTERVAL 1 DAY
+                </if>
+            </if>
+        </where>
+    </sql>
+    <insert id="regist"  parameterType="org.fullstack4.shareprj.domain.BbsVO" useGeneratedKeys="true" keyProperty="bbsIdx" keyColumn="bbsIdx">
+        INSERT INTO tbl_bbs (memberId, title, content, todayCk, todayCkStartDate, todayCkEndDate,likeCnt,category,hashtag,regDate,orgFileName,saveFileName, share1, share2, share3
+        <if test='( share1 != null and share1 != "" )or( share2 != null and share2 != "" )or( share3 != null and share3 != "" ) '>
+            , shareDate
+        </if>)
+        VALUES (#{memberId}, #{title}, #{content}, #{todayCk}, #{todayCkStartDate}, #{todayCkEndDate}, #{likeCnt}, #{category}, #{hashtag}, NOW(), #{orgFileName}, #{saveFileName},#{share1},#{share2},#{share3}
+        <if test='( share1 != null and share1 != "" )or( share2 != null and share2 != "" )or( share3 != null and share3 != "" ) '>
+            , NOW()
+        </if>)
+    </insert>
+    <insert id="shareList">
+        Insert into tbl_share(memberId, bbsIdx, toMemberId, shareDate)
+        value (#{memberId}, #{bbsIdx}, #{toMemberId}, now())
+    </insert>
+
+    <select id="studyList" resultType="org.fullstack4.shareprj.domain.BbsVO">
+        SELECT bbsIdx, left(title,50) as title, regDate, likeCnt, todayCk, todayCkStartDate, todayCkEndDate
+        from tbl_bbs
+        where memberId = #{memberId}
+    </select>
+
+    <select id="bbsTotalCount" resultType="int">
+        SELECT count(*) FROM tbl_bbs
+        <include refid="whereCondition"></include>
+    </select>
+
+    <select id="shareTotalCount" resultType="int">
+        SELECT count(distinct tb.bbsIdx) AS bbsIdx
+        FROM tbl_bbs AS tb
+        INNER JOIN tbl_share AS ts ON tb.bbsIdx = ts.bbsIdx
+        INNER JOIN tbl_member AS tm ON ts.memberId = tm.memberId
+        <include refid="whereCondition2"></include>
+<!--        <where>-->
+<!--            <trim prefix="and">-->
+<!--                tb.memberId = #{memberId}-->
+<!--            </trim>-->
+<!--            <if test="search_type != null">-->
+<!--                <trim prefix="and">-->
+<!--                    <foreach collection="search_type" item="type" open="(" close=")" separator=" OR ">-->
+<!--                        <if test="search_word != null and search_word != ''">-->
+<!--                            <if test="type=='t'.toString()">-->
+<!--                                tb.title LIKE CONCAT('%', #{search_word}, '%')-->
+<!--                            </if>-->
+<!--                            <if test="type=='c'.toString()">-->
+<!--                                tb.content LIKE CONCAT('%', #{search_word}, '%')-->
+<!--                            </if>-->
+<!--                        </if>-->
+<!--                    </foreach>-->
+<!--                </trim>-->
+<!--            </if>-->
+<!--&lt;!&ndash;            <if test="memberId != null">&ndash;&gt;-->
+<!--&lt;!&ndash;                And tb.memberId = #{memberId}&ndash;&gt;-->
+<!--&lt;!&ndash;            </if>&ndash;&gt;-->
+<!--&lt;!&ndash;            <if test="search_type != null and search_type.length > 0">&ndash;&gt;-->
+<!--&lt;!&ndash;                <foreach collection="search_type" item="type" open="(" close=")" separator=" OR ">&ndash;&gt;-->
+<!--&lt;!&ndash;                    <if test="type=='t'.toString()">&ndash;&gt;-->
+<!--&lt;!&ndash;                        tb.title LIKE CONCAT('%', #{search_word}, '%')&ndash;&gt;-->
+<!--&lt;!&ndash;                    </if>&ndash;&gt;-->
+<!--&lt;!&ndash;                    <if test="type=='c'.toString()">&ndash;&gt;-->
+<!--&lt;!&ndash;                        tb.content LIKE CONCAT('%', #{search_word}, '%')&ndash;&gt;-->
+<!--&lt;!&ndash;                    </if>&ndash;&gt;-->
+<!--&lt;!&ndash;                </foreach>&ndash;&gt;-->
+<!--&lt;!&ndash;            </if>&ndash;&gt;-->
+<!--            <if test="search_date != null or search_date2 != null">-->
+<!--                <if test="search_date != null and search_date.length > 0">-->
+<!--                    AND tb.regDate <![CDATA[>=]]> #{search_date}-->
+<!--                </if>-->
+<!--                <if test="search_date2 != null and search_date2.length > 0">-->
+<!--                    AND tb.regDate <![CDATA[<]]> #{search_date2} + INTERVAL 1 DAY-->
+<!--                </if>-->
+<!--            </if>-->
+<!--        </where>-->
+        ORDER BY tb.regDate DESC
+        LIMIT #{page_skip_count}, #{page_size}
+    </select>
+<!--onchange로 사용하여 바뀌는 순간 바로 submit ㅏ하는 것!-->
+    <select id="studyListByPage" resultType="org.fullstack4.shareprj.domain.BbsVO">
+        SELECT bbsIdx, left(title,50) as title, date_format(regDate,'%Y-%m-%d')as regDate, likeCnt, todayCk, todayCkStartDate, todayCkEndDate
+        FROM tbl_bbs
+        <include refid="whereCondition"></include>
+        ORDER BY bbsIdx DESC
+        LIMIT #{page_skip_count}, #{page_size}
+    </select>
+
+    <select id="studyListByPageLike" resultType="org.fullstack4.shareprj.domain.BbsVO">
+        SELECT bbsIdx, left(title,50) as title, date_format(regDate,'%Y-%m-%d')as regDate, likeCnt, todayCk, todayCkStartDate, todayCkEndDate
+        FROM tbl_bbs
+        <include refid="whereCondition"></include>
+        ORDER BY likeCnt DESC, bbsidx desc
+        LIMIT #{page_skip_count}, #{page_size}
+    </select>
+
+    <select id="shareListMine" resultType="org.fullstack4.shareprj.domain.ShareMineVO">
+        SELECT distinct tb.bbsIdx AS bbsIdx, tb.title AS title, tb.memberId AS memberId, tb.regDate AS regDate, tm.name AS name
+        FROM tbl_bbs AS tb
+        INNER JOIN tbl_share AS ts ON tb.bbsIdx = ts.bbsIdx
+        INNER JOIN tbl_member AS tm ON ts.memberId = tm.memberId
+<!--        <where>-->
+<!--            <trim prefix="and">-->
+<!--                tb.memberId = #{memberId}-->
+<!--            </trim>-->
+<!--            <if test="search_type != null">-->
+<!--                <trim prefix="and">-->
+<!--                    <foreach collection="search_type" item="type" open="(" close=")" separator=" OR ">-->
+<!--                        <if test="search_word != null and search_word != ''">-->
+<!--                            <if test="type=='t'.toString()">-->
+<!--                                tb.title LIKE CONCAT('%', #{search_word}, '%')-->
+<!--                            </if>-->
+<!--                            <if test="type=='c'.toString()">-->
+<!--                                tb.content LIKE CONCAT('%', #{search_word}, '%')-->
+<!--                            </if>-->
+<!--                        </if>-->
+<!--                    </foreach>-->
+<!--                </trim>-->
+<!--            </if>-->
+<!--            &lt;!&ndash;            <if test="memberId != null">&ndash;&gt;-->
+<!--            &lt;!&ndash;                And tb.memberId = #{memberId}&ndash;&gt;-->
+<!--            &lt;!&ndash;            </if>&ndash;&gt;-->
+<!--            &lt;!&ndash;            <if test="search_type != null and search_type.length > 0">&ndash;&gt;-->
+<!--            &lt;!&ndash;                <foreach collection="search_type" item="type" open="(" close=")" separator=" OR ">&ndash;&gt;-->
+<!--            &lt;!&ndash;                    <if test="type=='t'.toString()">&ndash;&gt;-->
+<!--            &lt;!&ndash;                        tb.title LIKE CONCAT('%', #{search_word}, '%')&ndash;&gt;-->
+<!--            &lt;!&ndash;                    </if>&ndash;&gt;-->
+<!--            &lt;!&ndash;                    <if test="type=='c'.toString()">&ndash;&gt;-->
+<!--            &lt;!&ndash;                        tb.content LIKE CONCAT('%', #{search_word}, '%')&ndash;&gt;-->
+<!--            &lt;!&ndash;                    </if>&ndash;&gt;-->
+<!--            &lt;!&ndash;                </foreach>&ndash;&gt;-->
+<!--            &lt;!&ndash;            </if>&ndash;&gt;-->
+<!--            <if test="search_date != null or search_date2 != null">-->
+<!--                <if test="search_date != null and search_date.length > 0">-->
+<!--                    AND tb.regDate <![CDATA[>=]]> #{search_date}-->
+<!--                </if>-->
+<!--                <if test="search_date2 != null and search_date2.length > 0">-->
+<!--                    AND tb.regDate <![CDATA[<]]> #{search_date2} + INTERVAL 1 DAY-->
+<!--                </if>-->
+<!--            </if>-->
+<!--        </where>-->
+        <include refid="whereCondition2"></include>
+        ORDER BY tb.regDate DESC
+        LIMIT #{page_skip_count}, #{page_size}
+    </select>
+
+    <select id="shareListOther" resultType="org.fullstack4.shareprj.domain.ShareMineVO">
+        SELECT distinct tb.bbsIdx AS bbsIdx, tb.title AS title, tb.memberId AS memberId, tb.regDate AS regDate, tm.name AS name
+        FROM tbl_bbs AS tb
+        INNER JOIN tbl_share AS ts ON tb.bbsIdx = ts.bbsIdx
+        INNER JOIN tbl_member AS tm ON ts.memberId = tm.memberId
+
+        <where>
+            <trim prefix="and">
+                ts.toMemberId = #{memberId}
+            </trim>
+            <if test="search_type != null">
+                <trim prefix="and">
+                    <foreach collection="search_type" item="type" open="(" close=")" separator=" OR ">
+                        <if test="search_word != null and search_word != ''">
+                            <if test="type=='t'.toString()">
+                                tb.title LIKE CONCAT('%', #{search_word}, '%')
+                            </if>
+                            <if test="type=='c'.toString()">
+                                tb.content LIKE CONCAT('%', #{search_word}, '%')
+                            </if>
+                        </if>
+                    </foreach>
+                </trim>
+            </if>
+            <if test="search_date != null or search_date2 != null">
+                <if test="search_date != null and search_date.length > 0">
+                    AND tb.regDate <![CDATA[>=]]> #{search_date}
+                </if>
+                <if test="search_date2 != null and search_date2.length > 0">
+                    AND tb.regDate <![CDATA[<]]> #{search_date2} + INTERVAL 1 DAY
+                </if>
+            </if>
+        </where>
+
+        ORDER BY tb.regDate DESC
+        LIMIT #{page_skip_count}, #{page_size}
+    </select>
+
+    <select id="view" resultType="org.fullstack4.shareprj.domain.BbsVO">
+        SELECT  date_format(regDate,'%Y-%m-%d')as regDate,bbsIdx, title, memberid, content, todayck, todayckstartdate, todayckenddate, likecnt, category, hashtag, modifydate, orgfilename, savefilename, share1, share2, share3
+        FROM tbl_bbs
+        where bbsIdx = #{bbsIdx}
+    </select>
+
+    <insert id="share" >
+        INSERT INTO tbl_share (toMemberId,memberId, shareIdx, shareDate)
+        VALUES (#{share}, #{memberId}, #{bbsIdx}, now())
+    </insert>
+
+    <update id="modify">
+        UPDATE tbl_bbs SET memberId = #{memberId},
+                           title = #{title},
+                           content= #{content},
+                           todayCk=#{todayCk},
+                           todayCkStartDate =#{todayCkStartDate},
+                           todayCkEndDate=#{todayCkEndDate},
+                            category=#{category},
+                            hashtag=#{hashtag},
+                            orgFileName=#{orgFileName},
+                            saveFileName=#{saveFileName},
+                           modifyDate= now(),
+                           share1 = #{share1},
+                           share2= #{share2},
+                           share3 = #{share3}
+        WHERE bbsIdx=#{bbsIdx}
+    </update>
+
+    <delete id="delete" >
+        delete FROM tbl_bbs
+        WHERE bbsIdx=#{bbsIdx}
+    </delete>
+
+
+</mapper>

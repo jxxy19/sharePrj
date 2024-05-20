@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://mybatis.org/schema/mybatis-spring
+        http://mybatis.org/schema/mybatis-spring.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd">
+    <!--    new로 추가한 것 자바 클래스 객체로 만든 것들은 bean -->
+    <bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+        <property name="driverClassName" value="org.mariadb.jdbc.Driver"></property>
+        <property name="jdbcUrl" value="jdbc:mariadb://localhost:3306/springprj"></property>
+        <property name="username" value="share"></property>
+        <property name="password" value="share"></property>
+        <property name="dataSourceProperties">
+            <props>
+                <prop key="cachePrepStmt">true</prop>
+                <prop key="prepStmtCacheSize">250</prop>
+                <prop key="prepStmtCacheSqlLimit">2048</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+        <constructor-arg ref="hikariConfig" />
+    </bean>
+
+    <!--    sqlSessionFactoryBean sqlSFB = new SqlSessionFactoryBean(dataSource);-->
+    <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="mapperLocations" value="classpath:/mappers/**/*.xml"/>
+    </bean>
+    <!--   xml에 대한 세팅 (sql 구문)-->
+
+    <mybatis:scan base-package="org.fullstack4.shareprj.mapper"></mybatis:scan>
+    <!--    마이바티스 설정 구문-->
+
+    <!--    트랜잭션 관리 객체-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+        <!--        히카리시피가 가지고 있는 것을 넣어서 생성-->
+    </bean>
+    <context:component-scan base-package="org.fullstack4.shareprj.config"/>
+    <context:component-scan base-package="org.fullstack4.shareprj.service"/>
+
+
+</beans>
